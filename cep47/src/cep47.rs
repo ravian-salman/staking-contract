@@ -80,7 +80,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
     fn amount_staked(&self, staker: Key) -> U256 {
         StakedTokens::instance().get_amount_staked_by_address(&staker).unwrap()
         }
-    }
+
 
 
     fn stake(
@@ -208,9 +208,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
     }
     
 
-    
-
     fn emit(&mut self, event: CEP47Event) {
         data::emit(&event);
     }
-
+}

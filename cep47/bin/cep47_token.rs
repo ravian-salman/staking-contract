@@ -13,7 +13,7 @@ use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
     EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
-use cep47::{Meta, TokenId, CEP47};
+use cep47::{Meta, TokenId, CEP20STK};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
@@ -25,7 +25,7 @@ impl ContractContext<OnChainContractStorage> for NFTToken {
     }
 }
 
-impl CEP47<OnChainContractStorage> for NFTToken {}
+impl CEP20STK<OnChainContractStorage> for NFTToken {}
 impl NFTToken {
     fn constructor(&mut self, name: String, symbol: String, meta: Meta) {
         CEP47::init(self, name, symbol, meta);
@@ -47,126 +47,65 @@ fn name() {
 }
 
 #[no_mangle]
-fn symbol() {
-    let ret = NFTToken::default().symbol();
+fn address() {
+    let ret = NFTToken::default().address();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn meta() {
-    let ret = NFTToken::default().meta();
+fn staking_starts() {
+    let ret = NFTToken::default().staking_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn total_supply() {
-    let ret = NFTToken::default().total_supply();
+fn staking_ends() {
+    let ret = NFTToken::default().staking_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn balance_of() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let ret = NFTToken::default().balance_of(owner);
+fn withdraw_starts() {
+    let ret = NFTToken::default().withdraw_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn get_token_by_index() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let index = runtime::get_named_arg::<U256>("index");
-    let ret = NFTToken::default().get_token_by_index(owner, index);
+fn withdraw_ends() {
+    let ret = NFTToken::default().withdraw_ends();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn owner_of() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().owner_of(token_id);
+fn staking_total() {
+    let ret = NFTToken::default().staking_total();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn token_meta() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().token_meta(token_id);
+fn amount_staked() {
+    let ret = NFTToken::default().amount_staked();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn update_token_meta() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
-    NFTToken::default()
-        .set_token_meta(token_id, token_meta)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn mint() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    let token_metas = runtime::get_named_arg::<Vec<Meta>>("token_metas");
-    NFTToken::default()
-        .mint(recipient, token_ids, token_metas)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn mint_copies() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<U256>>("token_ids");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
-    let count = runtime::get_named_arg::<u32>("count");
-    NFTToken::default()
-        .mint_copies(recipient, token_ids, token_meta, count)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn burn() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .burn(owner, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .transfer(recipient, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer_from() {
-    let sender = runtime::get_named_arg::<Key>("sender");
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .transfer_from(sender, recipient, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn approve() {
-    let spender = runtime::get_named_arg::<Key>("spender");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .approve(spender, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn get_approved() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().get_approved(owner, token_id);
+fn stake() {
+    let ret = NFTToken::default().stake();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
+
+#[no_mangle]
+fn withdraw() {
+    let ret = NFTToken::default().withdraw();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+#[no_mangle]
+fn add_reward() {
+    let ret = NFTToken::default().add_reward();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
 
 #[no_mangle]
 fn call() {
