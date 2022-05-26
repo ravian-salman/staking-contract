@@ -1,186 +1,138 @@
 #![no_main]
 #![no_std]
 
-#[macro_use]
 extern crate alloc;
 
-use alloc::{boxed::Box, collections::BTreeSet, format, string::String, vec::Vec};
+use alloc::{boxed::Box, collections::BTreeSet, format, string::String};
+use alloc::vec;
 use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{
-    runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
-    EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
+    runtime_args, CLType, CLTyped, Key, Group, Parameter, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
+    EntryPointType, EntryPoints, RuntimeArgs, URef, U256,
 };
-use cep47::{Meta, TokenId, CEP47};
+use cep47::{CEP20STK};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
-struct NFTToken(OnChainContractStorage);
+struct Token(OnChainContractStorage);
 
-impl ContractContext<OnChainContractStorage> for NFTToken {
+impl ContractContext<OnChainContractStorage> for Token {
     fn storage(&self) -> &OnChainContractStorage {
         &self.0
     }
 }
 
-impl CEP47<OnChainContractStorage> for NFTToken {}
-impl NFTToken {
-    fn constructor(&mut self, name: String, symbol: String, meta: Meta) {
-        CEP47::init(self, name, symbol, meta);
+impl CEP20STK<OnChainContractStorage> for Token {}
+impl Token {
+    fn constructor(&mut self, name: String, address: String, staking_starts: u64, staking_ends: u64, withdraw_starts: u64, withdraw_ends: u64, staking_total: U256) {
+        CEP20STK::init(self, name, address, staking_starts, staking_ends, withdraw_starts, withdraw_ends, staking_total);
     }
 }
 
 #[no_mangle]
 fn constructor() {
     let name = runtime::get_named_arg::<String>("name");
-    let symbol = runtime::get_named_arg::<String>("symbol");
-    let meta = runtime::get_named_arg::<Meta>("meta");
-    NFTToken::default().constructor(name, symbol, meta);
+    let address = runtime::get_named_arg::<String>("address");
+    let staking_starts: u64 = runtime::get_named_arg::<u64>("staking_starts");
+    let staking_ends: u64 = runtime::get_named_arg::<u64>("staking_ends");
+    let withdraw_starts: u64 = runtime::get_named_arg::<u64>("withdraw_starts");
+    let withdraw_ends: u64 = runtime::get_named_arg::<u64>("withdraw_ends");
+    let staking_total: U256 = runtime::get_named_arg::<U256>("staking_total");
+
+    Token::default().constructor(name, address, staking_starts, staking_ends, withdraw_starts, withdraw_ends, staking_total);
 }
 
 #[no_mangle]
 fn name() {
-    let ret = NFTToken::default().name();
+    let ret = Token::default().name();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn symbol() {
-    let ret = NFTToken::default().symbol();
+fn address() {
+    let ret = Token::default().address();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn meta() {
-    let ret = NFTToken::default().meta();
+fn staking_starts() {
+    let ret = Token::default().staking_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn total_supply() {
-    let ret = NFTToken::default().total_supply();
+fn staking_ends() {
+    let ret = Token::default().staking_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn balance_of() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let ret = NFTToken::default().balance_of(owner);
+fn withdraw_starts() {
+    let ret = Token::default().withdraw_starts();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn get_token_by_index() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let index = runtime::get_named_arg::<U256>("index");
-    let ret = NFTToken::default().get_token_by_index(owner, index);
+fn withdraw_ends() {
+    let ret = Token::default().withdraw_ends();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn owner_of() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().owner_of(token_id);
+fn staking_total() {
+    let ret = Token::default().staking_total();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn token_meta() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().token_meta(token_id);
+fn amount_staked() {
+    let ret = Token::default().amount_staked();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn update_token_meta() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
-    NFTToken::default()
-        .set_token_meta(token_id, token_meta)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn mint() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    let token_metas = runtime::get_named_arg::<Vec<Meta>>("token_metas");
-    NFTToken::default()
-        .mint(recipient, token_ids, token_metas)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn mint_copies() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<U256>>("token_ids");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
-    let count = runtime::get_named_arg::<u32>("count");
-    NFTToken::default()
-        .mint_copies(recipient, token_ids, token_meta, count)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn burn() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .burn(owner, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .transfer(recipient, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer_from() {
-    let sender = runtime::get_named_arg::<Key>("sender");
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .transfer_from(sender, recipient, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn approve() {
-    let spender = runtime::get_named_arg::<Key>("spender");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
-        .approve(spender, token_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn get_approved() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().get_approved(owner, token_id);
+fn stake() {
+    let ret = Token::default().stake();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
+
+#[no_mangle]
+fn withdraw() {
+    let ret = Token::default().withdraw();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+#[no_mangle]
+fn add_reward() {
+    let ret = Token::default().add_reward();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
 
 #[no_mangle]
 fn call() {
     // Read arguments for the constructor call.
     let name: String = runtime::get_named_arg("name");
-    let symbol: String = runtime::get_named_arg("symbol");
-    let meta: Meta = runtime::get_named_arg("meta");
+    let address = runtime::get_named_arg::<String>("address");
+    let staking_starts: u64 = runtime::get_named_arg::<u64>("staking_starts");
+    let staking_ends: u64 = runtime::get_named_arg::<u64>("staking_ends");
+    let withdraw_starts: u64 = runtime::get_named_arg::<u64>("withdraw_starts");
+    let withdraw_ends: u64 = runtime::get_named_arg::<u64>("withdraw_ends");
+    let staking_total: U256 = runtime::get_named_arg::<U256>("staking_total");
     let contract_name: String = runtime::get_named_arg("contract_name");
 
     // Prepare constructor args
     let constructor_args = runtime_args! {
         "name" => name,
-        "symbol" => symbol,
-        "meta" => meta
+        "address" => address,
+        "staking_starts" => staking_starts,
+        "staking_ends" => staking_ends,
+        "withdraw_starts" => withdraw_starts,
+        "withdraw_ends" => withdraw_ends,
+        "staking_total" => staking_total
     };
 
     let (contract_hash, _) = storage::new_contract(
@@ -226,8 +178,12 @@ fn get_entry_points() -> EntryPoints {
         "constructor",
         vec![
             Parameter::new("name", String::cl_type()),
-            Parameter::new("symbol", String::cl_type()),
-            Parameter::new("meta", Meta::cl_type()),
+            Parameter::new("address", String::cl_type()),
+            Parameter::new("staking_starts", u64::cl_type()),
+            Parameter::new("staking_ends", u64::cl_type()),
+            Parameter::new("withdraw_starts", u64::cl_type()),
+            Parameter::new("withdraw_ends", u64::cl_type()),
+            Parameter::new("staking_total", U256::cl_type())
         ],
         <()>::cl_type(),
         EntryPointAccess::Groups(vec![Group::new("constructor")]),
@@ -241,95 +197,59 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "symbol",
+        "address",
         vec![],
         String::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
-    ));
+    )); 
     entry_points.add_entry_point(EntryPoint::new(
-        "meta",
+        "staking_starts",
         vec![],
-        Meta::cl_type(),
+        u64::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
-    ));
+    )); 
     entry_points.add_entry_point(EntryPoint::new(
-        "total_supply",
+        "staking_starts",
+        vec![],
+        u64::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    )); 
+    entry_points.add_entry_point(EntryPoint::new(
+        "staking_ends",
+        vec![],
+        u64::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    )); 
+    entry_points.add_entry_point(EntryPoint::new(
+        "withdraw_starts",
+        vec![],
+        u64::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    )); 
+    entry_points.add_entry_point(EntryPoint::new(
+        "withdraw_ends",
+        vec![],
+        u64::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    )); 
+    entry_points.add_entry_point(EntryPoint::new(
+        "staking_total",
         vec![],
         U256::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "balance_of",
-        vec![Parameter::new("owner", Key::cl_type())],
-        U256::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "owner_of",
-        vec![Parameter::new("token_id", TokenId::cl_type())],
-        CLType::Option(Box::new(CLType::Key)),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "token_meta",
-        vec![Parameter::new("token_id", TokenId::cl_type())],
-        Meta::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "update_token_meta",
-        vec![
-            Parameter::new("token_id", TokenId::cl_type()),
-            Parameter::new("token_meta", Meta::cl_type()),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "mint",
-        vec![
-            Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_metas", CLType::List(Box::new(Meta::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "mint_copies",
-        vec![
-            Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_meta", Meta::cl_type()),
-            Parameter::new("count", CLType::U32),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "burn",
-        vec![
-            Parameter::new("owner", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
+    )); 
     entry_points.add_entry_point(EntryPoint::new(
         "transfer",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("amount", Key::cl_type())
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -340,7 +260,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("sender", Key::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("amount", Key::cl_type())
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -349,8 +269,7 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "approve",
         vec![
-            Parameter::new("spender", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("spender", Key::cl_type())
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -359,20 +278,9 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "get_approved",
         vec![
-            Parameter::new("owner", Key::cl_type()),
-            Parameter::new("token_id", TokenId::cl_type()),
+            Parameter::new("owner", Key::cl_type())
         ],
         CLType::Option(Box::new(CLType::Key)),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "get_token_by_index",
-        vec![
-            Parameter::new("owner", Key::cl_type()),
-            Parameter::new("index", U256::cl_type()),
-        ],
-        CLType::Option(Box::new(TokenId::cl_type())),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
