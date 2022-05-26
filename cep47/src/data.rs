@@ -8,7 +8,7 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_types::{system::CallStackElement, ContractPackageHash, Key, URef, U256};
-use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
+use contract_utils::{get_key, key_to_str, set_key, Dict};
 use crate::detail;
 use crate::{event::CEP47Event};
 
@@ -79,35 +79,35 @@ pub fn set_address(address: String) {
     set_key(ADDRESS, address);
 }
 
-pub fn staking_starts() -> U256 {
+pub fn staking_starts() -> u64 {
     get_key(STAKING_STARTS).unwrap_or_revert()
 }
 
-pub fn set_staking_starts(staking_starts: U256) {
+pub fn set_staking_starts(staking_starts: u64) {
     set_key(STAKING_STARTS, staking_starts);
 }
 
-pub fn staking_ends() -> U256 {
+pub fn staking_ends() -> u64 {
     get_key(STAKING_ENDS).unwrap_or_revert()
 }
 
-pub fn set_staking_ends(staking_ends: U256) {
+pub fn set_staking_ends(staking_ends: u64) {
     set_key(STAKING_ENDS, staking_ends);
 }
 
-pub fn withdraw_starts() -> U256 {
+pub fn withdraw_starts() -> u64 {
     get_key(WITHDRAW_STARTS).unwrap_or_default()
 }
 
-pub fn set_withdraw_starts(withdraw_starts: U256) {
+pub fn set_withdraw_starts(withdraw_starts: u64) {
     set_key(WITHDRAW_STARTS, withdraw_starts);
 }
 
-pub fn withdraw_ends() -> U256 {
+pub fn withdraw_ends() -> u64 {
     get_key(WITHDRAW_ENDS).unwrap_or_default()
 }
 
-pub fn set_withdraw_ends(withdraw_ends: U256) {
+pub fn set_withdraw_ends(withdraw_ends: u64) {
     set_key(WITHDRAW_STARTS, withdraw_ends);
 }
 

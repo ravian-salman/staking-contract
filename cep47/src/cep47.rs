@@ -1,13 +1,12 @@
 use crate::{
     data::{self, StakedTokens},
-    event::CEP47Event,
-    Meta, TokenId,
+    event::CEP47Event
 };
 use casper_types::RuntimeArgs;
-use alloc::{string::String, vec::Vec};
+use alloc::{string::String};
 use casper_types::{ApiError, Key, U256, runtime_args, ContractPackageHash};
 use contract_utils::{ContractContext, ContractStorage};
-use core::convert::TryInto;
+// use core::convert::TryInto;
 use casper_contract::contract_api::runtime;
 use casper_types::ContractHash;
 use crate::detail;
@@ -33,10 +32,10 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
     fn init(&mut self,
         name: String,
         address: String, 
-        staking_starts: U256,
-        staking_ends: U256,
-        withdraw_starts: U256,
-        withdraw_ends: U256,
+        staking_starts: u64,
+        staking_ends: u64,
+        withdraw_starts: u64,
+        withdraw_ends: u64,
         staking_total: U256
         ) {
         data::set_name(name);
@@ -57,19 +56,19 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
         data::address()
     }
 
-    fn staking_starts(&self) -> U256 {
+    fn staking_starts(&self) -> u64 {
         data::staking_starts()
     }
 
-    fn staking_ends(&self) -> U256 {
+    fn staking_ends(&self) -> u64 {
         data::staking_ends()
     }
 
-    fn withdraw_starts(&self) -> U256 {
+    fn withdraw_starts(&self) -> u64 {
         data::withdraw_starts()
     }
 
-    fn withdraw_ends(&self) -> U256 {
+    fn withdraw_ends(&self) -> u64 {
         data::withdraw_ends()
     }
 
@@ -80,7 +79,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
     fn amount_staked(&self, staker: Key) -> U256 {
         StakedTokens::instance().get_amount_staked_by_address(&staker).unwrap()
         }
-    }
+
 
 
     fn stake(
@@ -106,7 +105,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
         let contract_hash = ContractHash::from_formatted_str(&lower_contracthash).unwrap();
         
         let lower_contractpackagehash = "hash-wasmc4929e7fcb71772c1cb39ebb702a70d036b0ad4f9caf420d3fd377f749dfdb17".to_lowercase();
-        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash); 
+        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash).unwrap(); 
 
         let args = runtime_args! {
             "owner" => detail::get_immediate_caller_address()?,
@@ -146,7 +145,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
         let contract_hash = ContractHash::from_formatted_str(&lower_contracthash).unwrap();
 
         let lower_contractpackagehash = "hash-4929e7fcb71772c1cb39ebb702a70d036b0ad4f9caf420d3fd377f749dfdb17".to_lowercase();
-        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash);
+        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash).unwrap();
 
         let args = runtime_args! {
             "recipient" => detail::get_immediate_caller_address()?,
@@ -189,7 +188,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
         let contract_hash = ContractHash::from_formatted_str(&lower_contracthash).unwrap();
         
         let lower_contractpackagehash = "hash-wasmc4929e7fcb71772c1cb39ebb702a70d036b0ad4f9caf420d3fd377f749dfdb17".to_lowercase();
-        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash); 
+        let contract_package_hash = ContractPackageHash::from_formatted_str(&lower_contractpackagehash).unwrap(); 
 
         let args = runtime_args! {
             "owner" => detail::get_immediate_caller_address()?,
@@ -208,9 +207,7 @@ pub trait CEP20STK<Storage: ContractStorage>: ContractContext<Storage> {
     }
     
 
-    
-
     fn emit(&mut self, event: CEP47Event) {
         data::emit(&event);
     }
-
+}
