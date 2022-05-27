@@ -89,25 +89,30 @@ fn staking_total() {
 
 #[no_mangle]
 fn amount_staked() {
-    let ret = Token::default().amount_staked();
+    let staker = runtime::get_named_arg::<Key>("staker");
+    let ret = Token::default().amount_staked(staker);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn stake() {
-    let ret = Token::default().stake();
+    let amount = runtime::get_named_arg::<U256>("amount");
+    let ret = Token::default().stake(amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn withdraw() {
-    let ret = Token::default().withdraw();
+    let amount = runtime::get_named_arg::<U256>("amount");
+    let ret = Token::default().withdraw(amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn add_reward() {
-    let ret = Token::default().add_reward();
+    let reward_amount = runtime::get_named_arg::<U256>("reward_amount");
+    let withdrawable_amount = runtime::get_named_arg::<U256>("withdrawable_amount");
+    let ret = Token::default().add_reward(reward_amount,withdrawable_amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
