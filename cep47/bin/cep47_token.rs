@@ -89,25 +89,30 @@ fn staking_total() {
 
 #[no_mangle]
 fn amount_staked() {
-    let ret = Token::default().amount_staked();
+    let staker = runtime::get_named_arg::<Key>("staker");
+    let ret = Token::default().amount_staked(staker);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn stake() {
-    let ret = Token::default().stake();
+    let amount = runtime::get_named_arg::<U256>("amount");
+    let ret = Token::default().stake(amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn withdraw() {
-    let ret = Token::default().withdraw();
+    let amount = runtime::get_named_arg::<U256>("amount");
+    let ret = Token::default().withdraw(amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn add_reward() {
-    let ret = Token::default().add_reward();
+    let reward_amount = runtime::get_named_arg::<U256>("reward_amount");
+    let withdrawable_amount = runtime::get_named_arg::<U256>("withdrawable_amount");
+    let ret = Token::default().add_reward(reward_amount,withdrawable_amount).unwrap_or_revert();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -122,8 +127,27 @@ fn call() {
     let withdraw_starts: u64 = runtime::get_named_arg::<u64>("withdraw_starts");
     let withdraw_ends: u64 = runtime::get_named_arg::<u64>("withdraw_ends");
     let staking_total: U256 = runtime::get_named_arg::<U256>("staking_total");
-    let contract_name: String = runtime::get_named_arg("contract_name");
+    // let contract_name: String = runtime::get_named_arg("contract_name");
 
+
+    /* 
+
+casper-client put-deploy \
+  --chain-name casper-test \
+  --node-address http://159.65.118.250:7777 \
+  --secret-key ./keys/secret_key.pem \
+  --session-path ./target/wasm32-unknown-unknown/release/cep47-token.wasm \
+  --payment-amount 80000000000 \
+  --session-arg "name:string='FerrumX'" \
+  --session-arg "address:string='hash-7e3f01576650a939a96c2caa6dcc19df8d2ef1882e4b6603a375234e22e07e4f'" \
+  --session-arg "staking_starts:u64='1653993649'" \
+  --session-arg "staking_ends:u64='1653994249'" \
+  --session-arg "withdraw_starts:u64='1653994549'" \
+  --session-arg "withdraw_ends:u64='1653994249'" \
+  --session-arg "staking_total:U256='500000'" 
+
+    */
+    
     // Prepare constructor args
     let constructor_args = runtime_args! {
         "name" => name,
@@ -205,20 +229,6 @@ fn get_entry_points() -> EntryPoints {
     )); 
     entry_points.add_entry_point(EntryPoint::new(
         "staking_starts",
-        vec![],
-        u64::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    )); 
-    entry_points.add_entry_point(EntryPoint::new(
-        "staking_starts",
-        vec![],
-        u64::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    )); 
-    entry_points.add_entry_point(EntryPoint::new(
-        "staking_ends",
         vec![],
         u64::cl_type(),
         EntryPointAccess::Public,
